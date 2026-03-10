@@ -1,0 +1,15 @@
+---
+Standard: Cpp11
+UseTab: Never
+IndentWidth: 4
+Language: Cpp
+
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+
+AllowShortIfStatementsOnASingleLine: true
+AllowShortBlocksOnASingleLine:       true
+
+ColumnLimit: 0
+
+BreakBeforeBraces: Allman
