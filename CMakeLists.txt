@@ -52,7 +52,14 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 # We need to specify these types since we are supporting multi-config IDEs like Xcode and Visual Studio
 set(CMAKE_CONFIGURATION_TYPES "Debug" "Release")
 
-add_executable(BayerImageCreate main.cpp)
+add_executable(BayerImageCreate
+  main.cpp
+  Source/Image/Bayer.hpp
+  Source/Macbeth/Macbeth.hpp
+  Source/Types/Types.hpp
+)
+
+target_include_directories(BayerImageCreate PRIVATE "Source")
 
 target_link_libraries(BayerImageCreate
     PRIVATE
