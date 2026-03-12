@@ -53,7 +53,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_CONFIGURATION_TYPES "Debug" "Release")
 
 add_executable(BayerImageCreate
-  main.cpp
+  Source/main.cpp
   Source/Image/Bayer.hpp
   Source/Macbeth/Macbeth.hpp
   Source/Types/Types.hpp
