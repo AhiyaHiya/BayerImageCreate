@@ -1,0 +1,44 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "CMake: Clean & Reconfigure",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "--build",
+                "${workspaceFolder}/build/${command:cmake.activeConfigurePresetName}",
+                "--target",
+                "clean"
+            ],
+            "dependsOn": "CMake: Delete Cache & Reconfigure",
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "CMake: Delete Cache & Reconfigure",
+            "type": "shell",
+            "command": "rm",
+            "args": [
+                "-rf",
+                "${workspaceFolder}/build/${command:cmake.activeConfigurePresetName}"
+            ],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "problemMatcher": [],
+            "detail": "Deletes build folder of current preset & re-runs configure"
+        },
+        {
+            "label": "CMake: Force Reconfigure",
+            "type": "cmake",
+            "command": "configure",
+            "detail": "Forces reconfiguration (equivalent to CMake: Configure)",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        }
+    ]
+}
