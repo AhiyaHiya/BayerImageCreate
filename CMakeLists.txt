@@ -55,6 +55,7 @@ set(CMAKE_CONFIGURATION_TYPES "Debug" "Release")
 add_executable(BayerImageCreate
   Source/main.cpp
   Source/Image/Bayer.hpp
+  Source/Image/JPEG.hpp
   Source/Image/Tiff.hpp
   Source/Macbeth/Macbeth.hpp
   Source/Types/Types.hpp

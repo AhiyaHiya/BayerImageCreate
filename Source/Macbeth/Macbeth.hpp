@@ -146,4 +146,51 @@ auto create_macbeth_colorchecker_image(const DemosaicTypes     bayerLayout,
     return image;
 }
 
+/*
+ Output is standard Macbeth ColorChecker image
+ Data is Interleaved RGB, e.g. RGBRGBRGBRGB
+ Bit depth is set by ImageT::value_type, so either uint8_t or uint16_t
+ Resolution is set by MacbethResolution
+    Output is RGB data, that is for a .
+ */
+template <typename ImageT, typename BitDepthT = ImageT::value_type>
+auto create_macbeth_colorchecker_data(const MacbethResolution resolution = MacbethResolution::Screen) -> ImageT
+{
+    const auto &[pixelsHigh, pixelsWide] = MacbethResolutions[resolution];
+    const int blockSize                  = pixelsWide / MacbethCols;
+
+    // Create a container big enough to hold an image that is pixelsWide * pixelsHigh in total pixels
+    // and contains 3 samples per pixel
+    auto image = ImageT(pixelsWide * pixelsHigh * RgbCount, 0);
+
+    auto colorIndex = 0;
+    for (auto r = 0; r < MacbethRows; ++r)
+    {
+        const auto rowStart = r * blockSize;
+        const auto rowStop  = rowStart + blockSize;
+
+        for (auto c = 0; c < MacbethCols; ++c)
+        {
+            const auto colStart = c * blockSize;
+            const auto colStop  = colStart + blockSize;
+
+            const auto &[r, g, b] = MacbethPatches[colorIndex];
+
+            for (auto y = rowStart; y < rowStop; ++y)
+            {
+                for (auto x = colStart; x < colStop; ++x)
+                {
+                    const auto offset = (y * (pixelsWide * RgbCount)) + (x * RgbCount);
+
+                    image[offset + 0] = r;
+                    image[offset + 1] = g;
+                    image[offset + 2] = b;
+                }
+            }
+            ++colorIndex;
+        }
+    }
+    return image;
+}
+
 #endif // __MACBETH_HPP__
