@@ -143,7 +143,7 @@ auto CreateMacbethImage(const MacbethResolution resolution) -> MacbethImage<Imag
     const auto &[pixelsHigh, pixelsWide] = MacbethResolutions[resolution];
     auto rgbData                         = create_macbeth_colorchecker_data<ImageT>(resolution);
     auto macbethImage                    = MacbethImage{
-                           .RgbData    = rgbData,
+                           .RgbData    = std::move(rgbData),
                            .PixelsWide = pixelsWide,
                            .PixelsHigh = pixelsHigh};
     return macbethImage;
