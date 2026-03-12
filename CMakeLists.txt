@@ -33,8 +33,12 @@ target_link_libraries(BayerImageCreate
 
 # Needed so that when app starts up, it can locate the shared libraries
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Linux")
-target_link_options(GaussianFilter
+    set(RPATH_OPTION "-Wl,-rpath,/usr/local/gcc-15/lib64")
+    if(CMAKE_CXX_COMPILER STREQUAL "/usr/bin/clang++")
+      set(RPATH_OPTION "-Wl,-rpath,/usr/lib/llvm-21/lib")
+    endif()
+    target_link_options(BayerImageCreate
         PRIVATE
-        "-Wl,-rpath,/usr/local/gcc-15/lib64"
-)
+        ${RPATH_OPTION}
+    )
 endif()
