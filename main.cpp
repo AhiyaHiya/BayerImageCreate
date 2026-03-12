@@ -1,20 +1,23 @@
+#include <array>
 #include <cstdint>
 #include <filesystem>
 #include <iostream>
 // #include <mdspan> // LLVM 21 doesn't not have mdspan and neither does GCC 15
 #include <vector>
 
+#include <tiffio.h>
 // #define STB_IMAGE_WRITE_IMPLEMENTATION
 // #include "stb_image_write.h"
 
 namespace
 {
 constexpr auto channelCount = 4U; // RGGB
+constexpr auto rgbCount     = 3U;
 
-using colors_t = std::array<std::uint8_t, channelCount>;
+using rgb_colors_t = std::array<std::uint8_t, rgbCount>;
 
 // These are RGB
-constexpr auto macbethPatches = std::array<colors_t, 24>{{
+constexpr auto macbethPatches = std::array<rgb_colors_t, 24>{{
     {{115, 82, 68}},   // 01 Dark skin
     {{194, 150, 130}}, // 02 Light skin
     {{98, 122, 157}},  // 03 Blue sky
@@ -48,7 +51,12 @@ enum MacbethResolution : std::uint8_t
     HighQualityPrint
 };
 
-constexpr auto macbethResolutions = std::array<std::pair<std::uint32_t, std::uint32_t>, 3>{{{612U, 792U}, {1275U, 1650U}, {2550U, 3300U}}};
+using height_t = std::uint32_t;
+using width_t  = std::uint32_t;
+
+constexpr auto macbethResolutions = std::array<std::pair<height_t, width_t>, 3>{{{612U, 792U},
+                                                                                 {1275U, 1650U},
+                                                                                 {2550U, 3300U}}};
 
 // These values copied from modules/imgproc/include/opencv2/imgproc.hpp
 enum class DemosaicTypes : std::int32_t
@@ -95,47 +103,77 @@ auto get_rggb_indexes(const DemosaicTypes bayerLayout) -> std::tuple<int32_t, in
     }
 }
 
-template <typename ImageT>
+/*
+ Uses Debayer layout to determine which color is returned
+   for (0,0), (0,1), (1,0), (1,1)
+*/
+template <typename BitDepthT, typename C00 = BitDepthT, typename C01 = BitDepthT, typename C10 = BitDepthT, typename C11 = BitDepthT>
+auto get_colors_for_bayer_layout(const DemosaicTypes bayerLayout, const rgb_colors_t &rgbColors, const std::uint16_t colorIndex)
+    -> std::tuple<C00, C01, C10, C11>
+{
+    const auto &[r, g, b] = rgbColors;
+    switch (bayerLayout)
+    {
+    case DemosaicTypes::COLOR_BayerBG2BGR:
+        return {r, g, g, b}; // RGGB
+    case DemosaicTypes::COLOR_BayerGB2BGR:
+        return {g, r, b, g}; // GRBG
+    case DemosaicTypes::COLOR_BayerRG2BGR:
+        return {g, b, r, g}; // BGGR
+    case DemosaicTypes::COLOR_BayerGR2BGR:
+        return {b, g, g, r}; // GBRG
+    default:
+        throw std::runtime_error("Unsupported Bayer layout");
+    }
+}
+
+/*
+ Returns interleaved image.
+ If Bayer format is RGGB:
+    Row 0 RGRGRGRGRGRGRGRG
+    Row 1 GBGBGBGBGBGBGBGB
+ */
+template <typename ImageT, typename BitDepthT = ImageT::value_type>
 auto create_macbeth_colorchecker_image(const DemosaicTypes     bayerLayout,
                                        const MacbethResolution resolution = MacbethResolution::Screen) -> ImageT
 {
-    const auto    &res        = macbethResolutions[resolution];
-    const auto     pixelsWide = res.first;
-    const auto     pixelsHigh = res.second;
-    constexpr auto cols       = 6U;
-    constexpr auto rows       = 4U;
+    constexpr auto cols = 6U;
+    constexpr auto rows = 4U;
 
-    const int blockSize = pixelsWide / cols;
+    const auto &[pixelsHig2, pixelsWide] = macbethResolutions[resolution];
+    const int  blockSize                 = pixelsWide / cols;
+    const auto pixelsHigh                = blockSize * rows;
+    const auto expectedPixelCount        = pixelsWide * pixelsHigh * channelCount;
+    auto       image                     = ImageT(pixelsWide * pixelsHigh * channelCount, 0);
 
-    auto image = ImageT(pixelsWide * pixelsHigh * channelCount, 0);
-    // auto image2D = std::mdspan(image.data(), pixelsHigh * 2, pixelsWide * 2);
-
-    const auto [rIndex, g0Index, g1Index, bIndex] = get_rggb_indexes(bayerLayout);
-    auto colorIndex                               = 0;
+    auto           colorIndex       = 0;
+    constexpr auto gridCount        = 2U;
+    auto           actualPixelCount = 0;
     for (auto r = 0; r < rows; ++r)
     {
+        const auto rowStart = r * blockSize;
+        const auto rowStop  = rowStart + blockSize;
+
         for (auto c = 0; c < cols; ++c)
         {
-            for (auto y = r * blockSize; y < r * blockSize + blockSize; ++y)
-            {
-                for (auto x = c * blockSize; x < c * blockSize + blockSize; ++x)
-                {
-                    const auto &color = macbethPatches[colorIndex];
-                    const auto  r     = color[rIndex];
-                    const auto  g0    = color[g0Index];
-                    const auto  g1    = color[g1Index];
-                    const auto  b     = color[bIndex];
+            const auto colStart = c * blockSize;
+            const auto colStop  = colStart + blockSize;
 
-                    // const auto x0            = x * channelCount;
-                    const auto offset = (y * width + x) * channelCount;
-                    // image2D[y][x0 + rIndex]  = r;
-                    // image2D[y][x0 + g0Index] = g0;
-                    // image2D[y][x0 + g1Index] = g1;
-                    // image2D[y][x0 + bIndex]  = b;
-                    image[offset + rIndex]  = r;
-                    image[offset + g0Index] = g0;
-                    image[offset + g1Index] = g1;
-                    image[offset + bIndex]  = b;
+            const auto &rgbColors            = macbethPatches[colorIndex];
+            const auto &[c00, c01, c10, c11] = get_colors_for_bayer_layout<BitDepthT>(bayerLayout, rgbColors, colorIndex);
+
+            for (auto y = rowStart; y < rowStop; ++y)
+            {
+                for (auto x = colStart; x < colStop; ++x)
+                {
+                    const auto offset0 = (y * (pixelsWide * gridCount)) + (x * gridCount);
+                    const auto offset1 = (y + 1 * (pixelsWide * gridCount)) + (x * gridCount);
+
+                    image[offset0 + 0] = c00;
+                    image[offset0 + 1] = c01;
+                    image[offset1 + 0] = c10;
+                    image[offset1 + 1] = c11;
+                    actualPixelCount += 4;
                 }
             }
             ++colorIndex;
@@ -152,9 +190,65 @@ auto create_macbeth_colorchecker_image(const DemosaicTypes     bayerLayout,
 //     return stbi_write_tiff(fullFilePath.c_str(), width, height, channelCount, image.data(), width * channelCount) != 0;
 // }
 
+class TiffHandler
+{
+  public:
+    TiffHandler(const std::filesystem::path fullFilePath)
+    {
+        tiffHandle = TIFFOpen(fullFilePath.c_str(), "w");
+    }
+    ~TiffHandler()
+    {
+        if (tiffHandle != nullptr)
+        {
+            TIFFClose(tiffHandle);
+        }
+    }
+    TiffHandler() = delete;
+
+    bool IsValid() { return tiffHandle != nullptr; }
+
+    operator TIFF *() { return tiffHandle; }
+
+  private:
+    TIFF *tiffHandle = nullptr;
+};
+
+/*
+  Incoming image is RGGB, or similar.
+  Pixels wide should be width of image, were 4 channels make up 1 pixel
+  Pixels high have the same attribute as Pixels wide.
+ */
 template <typename ImageT>
 bool save_image_as_tiff(const ImageT &image, const std::filesystem::path fullFilePath, const std::int32_t width, const std::int32_t height)
 {
+    auto tiff = TiffHandler(fullFilePath);
+    if (tiff.IsValid() == false) { return false; }
+
+    // TODO: 8-bit centric code in this section has to change to allow for 16-bit values as well
+    const auto adjustedWidth  = width * 2U;
+    const auto adjustedHeight = height * 2U;
+    TIFFSetField(tiff, TIFFTAG_IMAGEWIDTH, adjustedWidth);
+    TIFFSetField(tiff, TIFFTAG_IMAGELENGTH, adjustedHeight);
+    TIFFSetField(tiff, TIFFTAG_SAMPLESPERPIXEL, 1); // Greyscale
+    TIFFSetField(tiff, TIFFTAG_BITSPERSAMPLE, 8);   // TODO: Change
+    TIFFSetField(tiff, TIFFTAG_ORIENTATION, ORIENTATION_TOPLEFT);
+    TIFFSetField(tiff, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
+    TIFFSetField(tiff, TIFFTAG_PHOTOMETRIC, PHOTOMETRIC_MINISBLACK);
+    TIFFSetField(tiff, TIFFTAG_COMPRESSION, COMPRESSION_LZW); // Optional compression
+
+    tsize_t       linebytes = adjustedWidth;                            // Width in bytes for 8-bit
+    std::uint8_t *raster    = const_cast<std::uint8_t *>(image.data()); // TODO: questionable code by AI
+
+    for (auto row = 0; row < adjustedHeight; ++row)
+    {
+        // Write each scanline
+        if (TIFFWriteScanline(tiff, raster + (row * linebytes), row, 0) < 0)
+        {
+            return false;
+        }
+    }
+
     return false;
 }
 
@@ -164,13 +258,14 @@ int main(int, char **)
 {
     std::cout << "Hello!\n";
 
-    constexpr auto pixelsWide = 792U;
-    constexpr auto pixelsHigh = 612U;
+    auto image = create_macbeth_colorchecker_image<Image1D_8U>(DemosaicTypes::COLOR_BayerRGGB2BGR, MacbethResolution::Screen);
 
-    auto image = create_macbeth_colorchecker_image<Image1D_8U>(DemosaicTypes::COLOR_BayerRGGB2BGR);
-    (void)image;
+    const auto [height2, width] = macbethResolutions[MacbethResolution::Screen];
+    const auto height           = (width / 6U) * 4U;
+    const auto result           = save_image_as_tiff<Image1D_8U>(image, "/home/jaimerios/Pictures/MacbethImageRGGB_RAW.tiff",
+                                                                 width, height);
     // const auto result = save_image(image, "/home/jaimerios/Pictures/MacbethImageRGGB_RAW.tiff", pixelsWide, pixelsHigh);
     // std::cout << "Image save result: " << (result ? "Success\n" : "Fail\n");
 
-    return 0;
+    return result == true ? 0 : 1;
 }
