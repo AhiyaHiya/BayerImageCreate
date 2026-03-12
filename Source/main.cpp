@@ -18,17 +18,18 @@ namespace
 
 int main(int, char **)
 {
-    std::cout << "Hello!\n";
+    const auto macbethResolution = MacbethResolution::Screen;
+    const auto [height, width]   = MacbethResolutions[macbethResolution];
 
-    auto image = create_macbeth_colorchecker_image<Image1D_8U>(DemosaicTypes::COLOR_BayerRGGB2BGR, MacbethResolution::Screen);
-
-    const auto [height, width] = MacbethResolutions[MacbethResolution::Screen];
-    const auto result          = save_image_as_tiff<Image1D_8U>(image, "/home/jaimerios/Pictures/MacbethImageRGGB_RAW.tiff",
-                                                                width, height);
-
-    auto       rgbImage   = create_macbeth_colorchecker_data<Image1D_8U>();
-    const auto jpegResult = save_image(rgbImage, "/home/jaimerios/Pictures/MacbethImageRGB.jpg", width, height);
+    auto       rgbImage     = create_macbeth_colorchecker_data<Image1D_8U>(macbethResolution);
+    auto       macbethImage = CreateMacbethImage<Image1D_8U>(macbethResolution);
+    const auto jpegResult   = save_image(macbethImage, "/home/jaimerios/Pictures/MacbethImageRGB.jpg");
     std::cout << "JPEG Image save result: " << (jpegResult ? "Success\n" : "Fail\n");
+
+    auto image = create_macbeth_colorchecker_image<Image1D_8U>(DemosaicTypes::COLOR_BayerRGGB2BGR, macbethResolution);
+
+    const auto result = save_image_as_tiff<Image1D_8U>(image, "/home/jaimerios/Pictures/MacbethImageRGGB_RAW.tiff",
+                                                       width, height);
 
     return result == true ? 0 : 1;
 }

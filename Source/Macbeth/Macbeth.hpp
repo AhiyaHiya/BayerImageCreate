@@ -54,6 +54,15 @@ constexpr auto MacbethResolutions = std::array<std::pair<height_t, width_t>, 3>{
                                                                                  {1275U, 1650U},
                                                                                  {2550U, 3300U}}};
 
+template <typename ImageT>
+struct MacbethImage
+{
+    const ImageT       RgbData;
+    const width_t      PixelsWide;
+    const height_t     PixelsHigh;
+    const std::int32_t ChannelCount = 3U;
+};
+
 /*
  Uses Debayer layout to determine which color is returned
    for (0,0), (0,1), (1,0), (1,1)
@@ -128,6 +137,18 @@ auto create_macbeth_colorchecker_image(const DemosaicTypes     bayerLayout,
     return image;
 }
 
+template <typename ImageT>
+auto CreateMacbethImage(const MacbethResolution resolution) -> MacbethImage<ImageT>
+{
+    const auto &[pixelsHigh, pixelsWide] = MacbethResolutions[resolution];
+    auto rgbData                         = create_macbeth_colorchecker_data<ImageT>(resolution);
+    auto macbethImage                    = MacbethImage{
+                           .RgbData    = rgbData,
+                           .PixelsWide = pixelsWide,
+                           .PixelsHigh = pixelsHigh};
+    return macbethImage;
+}
+
 /*
  Output is standard Macbeth ColorChecker image
  Data is Interleaved RGB, e.g. RGBRGBRGBRGB
@@ -136,7 +157,7 @@ auto create_macbeth_colorchecker_image(const DemosaicTypes     bayerLayout,
     Output is RGB data, that is for a .
  */
 template <typename ImageT, typename BitDepthT = ImageT::value_type>
-auto create_macbeth_colorchecker_data(const MacbethResolution resolution = MacbethResolution::Screen) -> ImageT
+auto create_macbeth_colorchecker_data(const MacbethResolution resolution) -> ImageT
 {
     const auto &[pixelsHigh, pixelsWide] = MacbethResolutions[resolution];
     const int blockSize                  = pixelsWide / MacbethCols;

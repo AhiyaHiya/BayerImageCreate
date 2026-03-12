@@ -8,11 +8,10 @@
 #include <filesystem>
 
 template <typename ImageT>
-bool save_image(const ImageT &image, const std::filesystem::path fullFilePath, const std::int32_t width, const std::int32_t height)
+bool save_image(const ImageT &macbethImage, const std::filesystem::path fullFilePath)
 {
-    constexpr auto channelCount = 3;
-
-    return stbi_write_jpg(fullFilePath.c_str(), width, height, channelCount, image.data(), width * channelCount) != 0;
+    return stbi_write_jpg(fullFilePath.c_str(), macbethImage.PixelsWide, macbethImage.PixelsHigh, macbethImage.ChannelCount,
+                          macbethImage.RgbData.data(), macbethImage.PixelsWide * macbethImage.ChannelCount) != 0;
 }
 
 #endif // __JPEG_HPP__
