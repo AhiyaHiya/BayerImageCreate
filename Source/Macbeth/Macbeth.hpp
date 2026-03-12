@@ -7,13 +7,16 @@
 #include <cstdint>
 #include <stdexcept>
 
-constexpr auto channelCount = 4U; // RGGB
-constexpr auto rgbCount     = 3U;
+constexpr auto BayerChannelCount = 4U; // RGGB
+constexpr auto RgbCount          = 3U;
 
-using rgb_colors_t = std::array<std::uint8_t, rgbCount>;
+constexpr auto MacbethCols = 6U;
+constexpr auto MacbethRows = 4U;
+
+using rgb_colors_t = std::array<std::uint8_t, RgbCount>;
 
 // These are RGB
-constexpr auto macbethPatches = std::array<rgb_colors_t, 24>{{
+constexpr auto MacbethPatches = std::array<rgb_colors_t, 24>{{
     {{115, 82, 68}},   // 01 Dark skin
     {{194, 150, 130}}, // 02 Light skin
     {{98, 122, 157}},  // 03 Blue sky
@@ -47,7 +50,7 @@ enum MacbethResolution : std::uint8_t
     HighQualityPrint
 };
 
-constexpr auto macbethResolutions = std::array<std::pair<height_t, width_t>, 3>{{{612U, 792U},
+constexpr auto MacbethResolutions = std::array<std::pair<height_t, width_t>, 3>{{{612U, 792U},
                                                                                  {1275U, 1650U},
                                                                                  {2550U, 3300U}}};
 
@@ -103,28 +106,25 @@ template <typename ImageT, typename BitDepthT = ImageT::value_type>
 auto create_macbeth_colorchecker_image(const DemosaicTypes     bayerLayout,
                                        const MacbethResolution resolution = MacbethResolution::Screen) -> ImageT
 {
-    constexpr auto cols = 6U;
-    constexpr auto rows = 4U;
-
-    const auto &[pixelsHig2, pixelsWide] = macbethResolutions[resolution];
-    const int  blockSize                 = pixelsWide / cols;
-    const auto pixelsHigh                = blockSize * rows;
-    const auto expectedPixelCount        = pixelsWide * pixelsHigh * channelCount;
-    auto       image                     = ImageT(pixelsWide * pixelsHigh * channelCount, 0);
+    const auto &[pixelsHig2, pixelsWide] = MacbethResolutions[resolution];
+    const int  blockSize                 = pixelsWide / MacbethCols;
+    const auto pixelsHigh                = blockSize * MacbethRows;
+    const auto expectedPixelCount        = pixelsWide * pixelsHigh * BayerChannelCount;
+    auto       image                     = ImageT(pixelsWide * pixelsHigh * BayerChannelCount, 0);
 
     auto           colorIndex = 0;
     constexpr auto gridCount  = 2U;
-    for (auto r = 0; r < rows; ++r)
+    for (auto r = 0; r < MacbethRows; ++r)
     {
         const auto rowStart = r * blockSize;
         const auto rowStop  = rowStart + blockSize;
 
-        for (auto c = 0; c < cols; ++c)
+        for (auto c = 0; c < MacbethCols; ++c)
         {
             const auto colStart = c * blockSize;
             const auto colStop  = colStart + blockSize;
 
-            const auto &rgbColors            = macbethPatches[colorIndex];
+            const auto &rgbColors            = MacbethPatches[colorIndex];
             const auto &[c00, c01, c10, c11] = get_colors_for_bayer_layout<BitDepthT>(bayerLayout, rgbColors, colorIndex);
 
             for (auto y = rowStart; y < rowStop; ++y)

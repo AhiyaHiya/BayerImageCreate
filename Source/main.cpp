@@ -32,7 +32,7 @@ int main(int, char **)
 
     auto image = create_macbeth_colorchecker_image<Image1D_8U>(DemosaicTypes::COLOR_BayerRGGB2BGR, MacbethResolution::Screen);
 
-    const auto [height2, width] = macbethResolutions[MacbethResolution::Screen];
+    const auto [height2, width] = MacbethResolutions[MacbethResolution::Screen];
     const auto height           = (width / 6U) * 4U;
     const auto result           = save_image_as_tiff<Image1D_8U>(image, "/home/jaimerios/Pictures/MacbethImageRGGB_RAW.tiff",
                                                                  width, height);
