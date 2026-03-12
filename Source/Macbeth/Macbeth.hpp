@@ -1,14 +1,14 @@
 #ifndef __MACBETH_HPP__
 #define __MACBETH_HPP__
 
-#include <Types/Types.hpp>
+#include "Image/Bayer.hpp"
+#include "Types/Types.hpp"
 
 #include <array>
 #include <cstdint>
 #include <stdexcept>
 
-constexpr auto BayerChannelCount = 4U; // RGGB
-constexpr auto RgbCount          = 3U;
+constexpr auto RgbCount = 3U;
 
 constexpr auto MacbethCols = 6U;
 constexpr auto MacbethRows = 4U;
@@ -53,24 +53,6 @@ enum MacbethResolution : std::uint8_t
 constexpr auto MacbethResolutions = std::array<std::pair<height_t, width_t>, 3>{{{612U, 792U},
                                                                                  {1275U, 1650U},
                                                                                  {2550U, 3300U}}};
-
-// Returns the indexes of the RGGB channels in the order of R, G0, G1, B for the given Bayer layout
-auto get_rggb_indexes(const DemosaicTypes bayerLayout) -> std::tuple<int32_t, int32_t, int32_t, int32_t>
-{
-    switch (bayerLayout)
-    {
-    case DemosaicTypes::COLOR_BayerBG2BGR:
-        return {0, 1, 2, 3}; // RGGB
-    case DemosaicTypes::COLOR_BayerGB2BGR:
-        return {1, 0, 3, 2}; // GRBG
-    case DemosaicTypes::COLOR_BayerRG2BGR:
-        return {2, 3, 0, 1}; // BGGR
-    case DemosaicTypes::COLOR_BayerGR2BGR:
-        return {3, 2, 1, 0}; // GBRG
-    default:
-        throw std::runtime_error("Unsupported Bayer layout");
-    }
-}
 
 /*
  Uses Debayer layout to determine which color is returned

@@ -1,4 +1,4 @@
-#include "Image/Bayer.hpp"
+
 #include "Image/JPEG.hpp"
 #include "Image/Tiff.hpp"
 #include "Macbeth/Macbeth.hpp"

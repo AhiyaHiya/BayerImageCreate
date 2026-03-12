@@ -10,7 +10,7 @@
 template <typename ImageT>
 bool save_image(const ImageT &image, const std::filesystem::path fullFilePath, const std::int32_t width, const std::int32_t height)
 {
-    constexpr auto channelCount = 4;
+    constexpr auto channelCount = 3;
 
     return stbi_write_jpg(fullFilePath.c_str(), width, height, channelCount, image.data(), width * channelCount) != 0;
 }
