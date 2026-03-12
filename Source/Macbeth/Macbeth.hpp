@@ -68,7 +68,7 @@ struct MacbethImage
    for (0,0), (0,1), (1,0), (1,1)
 */
 template <typename BitDepthT, typename C00 = BitDepthT, typename C01 = BitDepthT, typename C10 = BitDepthT, typename C11 = BitDepthT>
-auto get_colors_for_bayer_layout(const DemosaicTypes bayerLayout, const rgb_colors_t &rgbColors, const std::uint16_t colorIndex)
+auto get_colors_for_bayer_layout(const DemosaicTypes bayerLayout, const rgb_colors_t &rgbColors)
     -> std::tuple<C00, C01, C10, C11>
 {
     const auto &[r, g, b] = rgbColors;
@@ -116,7 +116,7 @@ auto create_macbeth_colorchecker_image(const DemosaicTypes     bayerLayout,
             const auto colStop  = colStart + blockSize;
 
             const auto &rgbColors            = MacbethPatches[colorIndex];
-            const auto &[c00, c01, c10, c11] = get_colors_for_bayer_layout<BitDepthT>(bayerLayout, rgbColors, colorIndex);
+            const auto &[c00, c01, c10, c11] = get_colors_for_bayer_layout<BitDepthT>(bayerLayout, rgbColors);
 
             for (auto y = rowStart; y < rowStop; ++y)
             {
