@@ -57,6 +57,9 @@ constexpr auto MacbethResolutions = std::array<std::pair<height_t, width_t>, 3>{
 template <typename ImageT>
 struct MacbethImage
 {
+    using bit_depth_type = ImageT::value_type;
+    using container_type = ImageT;
+
     const ImageT       RgbData;
     const width_t      PixelsWide;
     const height_t     PixelsHigh;
