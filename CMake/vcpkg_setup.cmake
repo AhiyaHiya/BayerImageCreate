@@ -22,7 +22,7 @@
 # Ref
 # https://vcpkg.io/en/package/opencv
 
-message(STATUS "Setting up vcpkg...")
+message(STATUS "Setting up vcpkg")
 
 find_package(Git QUIET)
 
@@ -32,6 +32,7 @@ else()
     set(bootstrap_vcpkg_ext "sh")
 endif()
 
+message(STATUS "Checking for vcpkg submodule")
 if(GIT_FOUND AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
     # Check if a known file in the submodule exists
     if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/vcpkg/bootstrap-vcpkg.${bootstrap_vcpkg_ext}")
@@ -46,7 +47,7 @@ if(GIT_FOUND AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
     endif()
 endif()
 
-message(STATUS " ${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/vcpkg/bootstrap-vcpkg.${bootstrap_vcpkg_ext}")
+message(STATUS "Calling bootstrap-vcpkg.${bootstrap_vcpkg_ext}")
 execute_process(
         COMMAND "${CMAKE_CURRENT_SOURCE_DIR}/ThirdParty/vcpkg/bootstrap-vcpkg.${bootstrap_vcpkg_ext}"
         RESULT_VARIABLE bootstrap_vcpkg_result
@@ -69,3 +70,5 @@ else()
         message(FATAL_ERROR "CMAKE_TOOLCHAIN_FILE is set to '${CMAKE_TOOLCHAIN_FILE}', but the file does not exist.")
     endif()
 endif()
+
+message(STATUS "vcpkg setup complete. CMAKE_TOOLCHAIN_FILE set to: ${CMAKE_TOOLCHAIN_FILE}")
