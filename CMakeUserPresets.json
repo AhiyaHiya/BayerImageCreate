@@ -1,0 +1,26 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "my-vs2026",
+      "inherits": "default-vs2026",
+      "architecture": "x64",
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "x64-windows-static"
+      },
+      "environment": {
+        "VCPKG_FEATURE_FLAGS": "versions",
+        "VCPKG_ROOT": "${sourceDir}/ThirdParty/vcpkg/vcpkg.exe"
+      }
+    },
+    {
+      "name": "my-macos-xcode",
+      "inherits": "default-macos-xcode",
+      "displayName": "My macOS Xcode Config",
+      "description": "User-specific macOS preset (Intel)",
+      "environment": {
+        "VCPKG_FEATURE_FLAGS": "versions"
+      }
+    }
+  ]
+}

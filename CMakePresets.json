@@ -4,63 +4,122 @@
         "major": 4,
         "minor": 1,
         "patch": 2
+  "configurePresets": [
+    {
+      "name": "vcpkg_defaults",
+      "cacheVariables": {
+        "VCPKG_MANIFEST_INSTALL": "ON"
+      }
     },
-    "configurePresets": [
-        {
-            "name": "clang-debug",
-            "displayName": "Clang Debug",
-            "description": "Debug build using clang",
-            "generator": "Ninja",
-            "binaryDir": "${sourceDir}/build/clang-debug",
-            "cacheVariables": {
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_C_COMPILER": "/usr/bin/clang",
-                "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
-                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake"
-            }
+    {
+      "name": "default-linux-gcc",
+      "inherits": "vcpkg_defaults",
+      "displayName": "Default Linux GCC",
+      "description": "Linux settings for GCC + vcpkg",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "toolchainFile": "${sourceDir}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "VCPKG_MANIFEST_INSTALL": "ON",
+        "VCPKG_TARGET_TRIPLET": "x64-linux",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_C_COMPILER": "/usr/bin/gcc",
+        "CMAKE_CXX_COMPILER": "/usr/bin/g++"
+      }
+    },
+    {
+      "name": "gcc-debug-amd64_x86",
+      "inherits": "default-linux-gcc",
+      "displayName": "Linux GCC Debug",
+      "description": "Ninja + GCC Debug build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "gcc-release-amd64_x86",
+      "inherits": "default-linux-gcc",
+      "displayName": "Linux GCC Release",
+      "description": "Ninja + GCC Release build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "default-vs2026",
+      "inherits": "vcpkg_defaults",
+      "displayName": "Default Config",
+      "description": "Default build Debug configuration",
+      "generator": "Visual Studio 18 2026",
+      "toolset": "host=x64",
+      "architecture": "win32",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_C_COMPILER": "cl.exe",
+        "CMAKE_CXX_COMPILER": "cl.exe",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+        "CMAKE_TOOLCHAIN_FILE": {
+          "value": "${sourceDir}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake",
+          "type": "FILEPATH"
         },
-        {
-            "name": "clang-release",
-            "displayName": "Clang Release",
-            "description": "Release build using clang",
-            "generator": "Ninja",
-            "binaryDir": "${sourceDir}/build/clang-release",
-            "cacheVariables": {
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_C_COMPILER": "/usr/bin/clang",
-                "CMAKE_CXX_COMPILER": "/usr/bin/clang++",
-                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake"
-            }
+        "VCPKG_TARGET_TRIPLET": "x86-windows-static"
+      }
+    },
+    {
+      "name": "VS2026-Debug-amd64_x86",
+      "inherits": "default-vs2026",
+      "displayName": "VS2026 Debug",
+      "description": "Visual Studio 18 2026 (x64_x86 architecture) Debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_CXX_FLAGS_DEBUG": "/Zi /Od /DDEBUG"
+      }
+    },
+    {
+      "name": "VS2026-Release-amd64_x86",
+      "inherits": "default-vs2026",
+      "displayName": "VS2026 Release",
+      "description": "Visual Studio 18 2026 (x64_x86 architecture) Release",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_CXX_FLAGS_RELEASE": "/O2 /Ob2 /DNDEBUG"
+      }
+    },
+    {
+      "name": "default-macos-xcode",
+      "inherits": "vcpkg_defaults",
+      "displayName": "Default macOS Xcode",
+      "description": "macOS settings for Xcode + vcpkg (Intel x86_64)",
+      "generator": "Xcode",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": {
+          "value": "${sourceDir}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake",
+          "type": "FILEPATH"
         },
-        {
-            "name": "gcc-debug",
-            "displayName": "GCC Debug",
-            "description": "Debug build using gcc",
-            "generator": "Ninja",
-            "binaryDir": "${sourceDir}/build/gcc-debug",
-            "cacheVariables": {
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_C_COMPILER": "/usr/bin/gcc",
-                "CMAKE_CXX_COMPILER": "/usr/bin/g++",
-                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake"
-            }
-        },
-        {
-            "name": "gcc-release",
-            "displayName": "GCC Release",
-            "description": "Release build using gcc",
-            "generator": "Ninja",
-            "binaryDir": "${sourceDir}/build/gcc-release",
-            "cacheVariables": {
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "CMAKE_BUILD_TYPE": "Release",
-                "CMAKE_C_COMPILER": "/usr/bin/gcc",
-                "CMAKE_CXX_COMPILER": "/usr/bin/g++",
-                "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/ThirdParty/vcpkg/scripts/buildsystems/vcpkg.cmake"
-            }
-        }
-    ]
+        "VCPKG_TARGET_TRIPLET": "x64-osx",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_OSX_ARCHITECTURES": "x86_64"
+      }
+    },
+    {
+      "name": "xcode-debug-amd64_x86",
+      "inherits": "default-macos-xcode",
+      "displayName": "macOS Xcode Debug",
+      "description": "Xcode Debug build for Intel Mac",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "xcode-release-amd64_x86",
+      "inherits": "default-macos-xcode",
+      "displayName": "macOS Xcode Release",
+      "description": "Xcode Release build for Intel Mac",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    }
+  ]
 }
