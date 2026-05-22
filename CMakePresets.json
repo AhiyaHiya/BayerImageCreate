@@ -1,14 +1,15 @@
 {
-    "version": 6,
-    "cmakeMinimumRequired": {
-        "major": 4,
-        "minor": 1,
-        "patch": 2
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 4,
+    "minor": 1,
+    "patch": 2
+  },
   "configurePresets": [
     {
       "name": "vcpkg_defaults",
       "cacheVariables": {
-        "VCPKG_MANIFEST_INSTALL": "ON"
+        "VCPKG_MANIFEST_INSTALL": "OFF"
       }
     },
     {

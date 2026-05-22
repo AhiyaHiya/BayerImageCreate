@@ -2,23 +2,12 @@ cmake_minimum_required(VERSION 4.1.2)
 
 include (CMake/vcpkg_setup.cmake)
 
-# --------------------- Dependencies ---------------------
-# Download CPM.cmake
-file(
-  DOWNLOAD
-  https://github.com/cpm-cmake/CPM.cmake/releases/download/v0.40.8/CPM.cmake
-  ${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake
-  EXPECTED_HASH SHA256=78ba32abdf798bc616bab7c73aac32a17bbd7b06ad9e26a6add69de8f3ae4791
-)
-include(${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake)
-include(CMake/stb.cmake)
-  # --------------------- End dependencies ---------------------
-
 message(STATUS "C compiler: ${CMAKE_C_COMPILER}")
 message(STATUS "CXX compiler: ${CMAKE_CXX_COMPILER}")
 
 project(BayerImageCreate VERSION 0.1.0 LANGUAGES C CXX)
 
+find_package(stb REQUIRED)
 find_package(TIFF REQUIRED)
 
 set(CMAKE_CXX_STANDARD 23)
